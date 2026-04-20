@@ -26,7 +26,6 @@ public class ProductoServlet extends HttpServlet {
 		if (!verificarSesion(req, resp)) {
 			return;
 		}
-		actualizarIdioma(req);
 
 		String accion = req.getParameter("accion");
 		if (accion == null) {
@@ -63,7 +62,6 @@ public class ProductoServlet extends HttpServlet {
 		if (!verificarSesion(req, resp)) {
 			return;
 		}
-		actualizarIdioma(req);
 
 		req.setCharacterEncoding("UTF-8");
 		String accion = req.getParameter("accion");
@@ -84,7 +82,6 @@ public class ProductoServlet extends HttpServlet {
 	private void listar(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 		req.setAttribute("usuarioActual", obtenerUsuarioActual(req));
-		req.setAttribute("lang", obtenerIdioma(req));
 		req.setAttribute("productos", service.obtenerTodos());
 		String msg = req.getParameter("mensaje");
 		if (msg != null) {
@@ -95,15 +92,18 @@ public class ProductoServlet extends HttpServlet {
 
 	private void mostrarFormulario(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
-		req.setAttribute("lang", obtenerIdioma(req));
 		forward(req, resp, "/WEB-INF/views/formulario.jsp");
 	}
 
 	private void mostrarEdicion(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 		int id = Integer.parseInt(req.getParameter("id"));
-		req.setAttribute("producto", service.obtenerPorId(id));
-		req.setAttribute("lang", obtenerIdioma(req));
+		Producto p = service.obtenerPorId(id);
+		req.setAttribute("producto", p);
+		req.setAttribute("nombre", p == null ? "" : p.getNombre());
+		req.setAttribute("precio", p == null ? "" : String.valueOf(p.getPrecio()));
+		req.setAttribute("stock", p == null ? "" : String.valueOf(p.getStock()));
+		req.setAttribute("categoria", p == null ? "" : p.getCategoria());
 		forward(req, resp, "/WEB-INF/views/formulario.jsp");
 	}
 
@@ -112,16 +112,20 @@ public class ProductoServlet extends HttpServlet {
 		Map<String, String> errores = new LinkedHashMap<>();
 		Producto p = extraerProducto(req, 0, errores);
 
+		req.setAttribute("nombre", req.getParameter("nombre"));
+		req.setAttribute("precio", req.getParameter("precio"));
+		req.setAttribute("stock", req.getParameter("stock"));
+		req.setAttribute("categoria", req.getParameter("categoria"));
+
 		if (!errores.isEmpty()) {
 			req.setAttribute("errores", errores);
 			req.setAttribute("producto", p);
-			req.setAttribute("lang", obtenerIdioma(req));
 			forward(req, resp, "/WEB-INF/views/formulario.jsp");
 			return;
 		}
 
 		service.guardar(p);
-		resp.sendRedirect(req.getContextPath() + "/productos?mensaje=producto.guardado");
+		resp.sendRedirect(req.getContextPath() + "/productos?mensaje=msg.guardado");
 	}
 
 	private void actualizar(HttpServletRequest req, HttpServletResponse resp)
@@ -130,23 +134,27 @@ public class ProductoServlet extends HttpServlet {
 		Map<String, String> errores = new LinkedHashMap<>();
 		Producto p = extraerProducto(req, id, errores);
 
+		req.setAttribute("nombre", req.getParameter("nombre"));
+		req.setAttribute("precio", req.getParameter("precio"));
+		req.setAttribute("stock", req.getParameter("stock"));
+		req.setAttribute("categoria", req.getParameter("categoria"));
+
 		if (!errores.isEmpty()) {
 			req.setAttribute("errores", errores);
 			req.setAttribute("producto", p);
-			req.setAttribute("lang", obtenerIdioma(req));
 			forward(req, resp, "/WEB-INF/views/formulario.jsp");
 			return;
 		}
 
 		service.actualizar(p);
-		resp.sendRedirect(req.getContextPath() + "/productos?mensaje=producto.actualizado");
+		resp.sendRedirect(req.getContextPath() + "/productos?mensaje=msg.actualizado");
 	}
 
 	private void eliminar(HttpServletRequest req, HttpServletResponse resp)
 			throws IOException {
 		int id = Integer.parseInt(req.getParameter("id"));
 		service.eliminar(id);
-		resp.sendRedirect(req.getContextPath() + "/productos?mensaje=producto.eliminado");
+		resp.sendRedirect(req.getContextPath() + "/productos?mensaje=msg.eliminado");
 	}
 
 	private Producto extraerProducto(HttpServletRequest req, int id, Map<String, String> errores) {
@@ -159,6 +167,8 @@ public class ProductoServlet extends HttpServlet {
 
 		if (nombre.isEmpty()) {
 			errores.put("nombre", bundle.getString("validation.nombre.required"));
+		} else if (nombre.length() > 100) {
+			errores.put("nombre", bundle.getString("validation.nombre.max"));
 		}
 
 		double precio = 0;
@@ -234,26 +244,16 @@ public class ProductoServlet extends HttpServlet {
 		return null;
 	}
 
-	private void actualizarIdioma(HttpServletRequest req) {
-		String lang = req.getParameter("lang");
-		if (lang != null && !lang.isBlank()) {
-			req.getSession(true).setAttribute("lang", normalizarIdioma(lang));
-		}
-	}
-
-	private String obtenerIdioma(HttpServletRequest req) {
-		HttpSession session = req.getSession(false);
-		Object langSession = session == null ? null : session.getAttribute("lang");
-		if (langSession instanceof String && !((String) langSession).isBlank()) {
-			return normalizarIdioma((String) langSession);
-		}
-
-		String headerLang = req.getLocale() != null ? req.getLocale().getLanguage() : "es";
-		return normalizarIdioma(headerLang);
-	}
-
 	private ResourceBundle obtenerBundle(HttpServletRequest req) {
-		return ResourceBundle.getBundle("i18n.messages", new Locale(obtenerIdioma(req)));
+		HttpSession session = req.getSession(false);
+		Locale locale = Locale.forLanguageTag("es");
+		if (session != null) {
+			Object localeAttr = session.getAttribute("locale");
+			if (localeAttr instanceof Locale) {
+				locale = (Locale) localeAttr;
+			}
+		}
+		return ResourceBundle.getBundle("messages", locale);
 	}
 
 	private String resolverMensaje(HttpServletRequest req, String key) {
@@ -262,11 +262,6 @@ public class ProductoServlet extends HttpServlet {
 			return bundle.getString(key);
 		}
 		return key;
-	}
-
-	private String normalizarIdioma(String lang) {
-		String v = lang.toLowerCase(Locale.ROOT);
-		return "en".equals(v) ? "en" : "es";
 	}
 
 	private String limpiar(String value) {

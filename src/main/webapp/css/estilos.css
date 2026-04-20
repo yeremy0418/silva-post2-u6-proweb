@@ -63,3 +63,15 @@ th {
 	border-radius: 6px;
 	margin: 12px 0;
 }
+
+.input-error {
+	border: 1px solid #dc2626;
+	background: #fff7f7;
+}
+
+.campo-error {
+	display: block;
+	margin-top: 6px;
+	color: #b91c1c;
+	font-size: 13px;
+}

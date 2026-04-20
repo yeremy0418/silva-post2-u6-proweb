@@ -22,7 +22,7 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        actualizarIdioma(req);
+        asegurarLocale(req);
         req.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(req, resp);
     }
 
@@ -30,7 +30,7 @@ public class LoginServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
-        actualizarIdioma(req);
+        asegurarLocale(req);
 
         String user = req.getParameter("username");
         String pass = req.getParameter("password");
@@ -47,22 +47,12 @@ public class LoginServlet extends HttpServlet {
         }
     }
 
-    private void actualizarIdioma(HttpServletRequest req) {
-        String lang = req.getParameter("lang");
-        if (lang != null && !lang.isBlank()) {
-            req.getSession(true).setAttribute("lang", normalizarIdioma(lang));
-            return;
-        }
-
+    private void asegurarLocale(HttpServletRequest req) {
         HttpSession session = req.getSession(false);
-        if (session == null || session.getAttribute("lang") == null) {
+        if (session == null || session.getAttribute("locale") == null) {
             String headerLang = req.getLocale() != null ? req.getLocale().getLanguage() : "es";
-            req.getSession(true).setAttribute("lang", normalizarIdioma(headerLang));
+            String normalized = "en".equalsIgnoreCase(headerLang) ? "en" : "es";
+            req.getSession(true).setAttribute("locale", new Locale(normalized));
         }
-    }
-
-    private String normalizarIdioma(String lang) {
-        String value = lang.toLowerCase(Locale.ROOT);
-        return "en".equals(value) ? "en" : "es";
     }
 }

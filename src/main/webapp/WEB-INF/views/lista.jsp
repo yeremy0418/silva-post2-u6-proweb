@@ -4,45 +4,44 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-	<fmt:setLocale value="${sessionScope.lang}"/>
-	<fmt:setBundle basename="i18n.messages"/>
+	<fmt:setLocale value="${sessionScope.locale != null ? sessionScope.locale : 'es'}"/>
+	<fmt:setBundle basename="messages"/>
 	<meta charset="UTF-8">
-	<title><fmt:message key="producto.list.title"/></title>
+	<title><fmt:message key="app.titulo"/></title>
 	<link rel="stylesheet" href="<c:url value='/css/estilos.css'/>">
 </head>
 <body>
 	<p>
-		<fmt:message key="app.welcome"/>:
+		<fmt:message key="app.bienvenida"/>:
 		<strong><c:out value="${usuarioActual.username}"/></strong>
 		(<c:out value="${usuarioActual.rol}"/>)
 		| <a href="<c:url value='/logout'/>"><fmt:message key="app.logout"/></a>
 	</p>
 	<p>
-		<fmt:message key="app.language"/>:
-		<a href="<c:url value='/productos?lang=es'/>"><fmt:message key="app.spanish"/></a>
+		<a href="<c:url value='/idioma?lang=es'/>">Espanol</a>
 		|
-		<a href="<c:url value='/productos?lang=en'/>"><fmt:message key="app.english"/></a>
+		<a href="<c:url value='/idioma?lang=en'/>">English</a>
 	</p>
 
-	<h1><fmt:message key="producto.list.title"/></h1>
+	<h1><fmt:message key="app.titulo"/></h1>
 
 	<c:if test="${not empty mensaje}">
 		<p class="alert-success">${mensaje}</p>
 	</c:if>
 
 	<c:if test="${usuarioActual.rol == 'ADMIN'}">
-		<a href="<c:url value='/productos?accion=formulario&lang=${sessionScope.lang}'/>"><fmt:message key="producto.new"/></a>
+		<a href="<c:url value='/productos?accion=formulario'/>"><fmt:message key="menu.nuevo"/></a>
 	</c:if>
 
 	<table>
 		<thead>
 			<tr>
-				<th><fmt:message key="producto.id"/></th>
-				<th><fmt:message key="producto.nombre"/></th>
-				<th><fmt:message key="producto.categoria"/></th>
-				<th><fmt:message key="producto.precio"/></th>
-				<th><fmt:message key="producto.stock"/></th>
-				<th><fmt:message key="producto.acciones"/></th>
+				<th>ID</th>
+				<th><fmt:message key="tabla.nombre"/></th>
+				<th><fmt:message key="tabla.categoria"/></th>
+				<th><fmt:message key="tabla.precio"/></th>
+				<th><fmt:message key="tabla.stock"/></th>
+				<th><fmt:message key="tabla.acciones"/></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -55,8 +54,8 @@
 					<td>${p.stock}</td>
 					<td>
 						<c:if test="${usuarioActual.rol == 'ADMIN'}">
-							<a href="<c:url value='/productos?accion=editar&id=${p.id}&lang=${sessionScope.lang}'/>"><fmt:message key="producto.edit"/></a> |
-							<a href="<c:url value='/productos?accion=eliminar&id=${p.id}&lang=${sessionScope.lang}'/>" onclick="return confirm('<fmt:message key="producto.delete.confirm"><fmt:param value="${p.nombre}"/></fmt:message>')"><fmt:message key="producto.delete"/></a>
+							<a href="<c:url value='/productos?accion=editar&id=${p.id}'/>"><fmt:message key="btn.editar"/></a> |
+							<a href="<c:url value='/productos?accion=eliminar&id=${p.id}'/>" onclick="return confirm('<fmt:message key="msg.confirmar.eliminar"><fmt:param value="${p.nombre}"/></fmt:message>')"><fmt:message key="btn.eliminar"/></a>
 						</c:if>
 						<c:if test="${usuarioActual.rol != 'ADMIN'}">-</c:if>
 					</td>
