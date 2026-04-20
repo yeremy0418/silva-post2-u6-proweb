@@ -4,28 +4,45 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+	<fmt:setLocale value="${sessionScope.lang}"/>
+	<fmt:setBundle basename="i18n.messages"/>
 	<meta charset="UTF-8">
-	<title>Inventario de Productos</title>
+	<title><fmt:message key="producto.list.title"/></title>
 	<link rel="stylesheet" href="<c:url value='/css/estilos.css'/>">
 </head>
 <body>
-	<h1>Inventario de Productos</h1>
+	<p>
+		<fmt:message key="app.welcome"/>:
+		<strong><c:out value="${usuarioActual.username}"/></strong>
+		(<c:out value="${usuarioActual.rol}"/>)
+		| <a href="<c:url value='/logout'/>"><fmt:message key="app.logout"/></a>
+	</p>
+	<p>
+		<fmt:message key="app.language"/>:
+		<a href="<c:url value='/productos?lang=es'/>"><fmt:message key="app.spanish"/></a>
+		|
+		<a href="<c:url value='/productos?lang=en'/>"><fmt:message key="app.english"/></a>
+	</p>
+
+	<h1><fmt:message key="producto.list.title"/></h1>
 
 	<c:if test="${not empty mensaje}">
 		<p class="alert-success">${mensaje}</p>
 	</c:if>
 
-	<a href="<c:url value='/productos?accion=formulario'/>">+ Nuevo Producto</a>
+	<c:if test="${usuarioActual.rol == 'ADMIN'}">
+		<a href="<c:url value='/productos?accion=formulario&lang=${sessionScope.lang}'/>"><fmt:message key="producto.new"/></a>
+	</c:if>
 
 	<table>
 		<thead>
 			<tr>
-				<th>ID</th>
-				<th>Nombre</th>
-				<th>Categoria</th>
-				<th>Precio</th>
-				<th>Stock</th>
-				<th>Acciones</th>
+				<th><fmt:message key="producto.id"/></th>
+				<th><fmt:message key="producto.nombre"/></th>
+				<th><fmt:message key="producto.categoria"/></th>
+				<th><fmt:message key="producto.precio"/></th>
+				<th><fmt:message key="producto.stock"/></th>
+				<th><fmt:message key="producto.acciones"/></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -37,8 +54,11 @@
 					<td><fmt:formatNumber value="${p.precio}" type="currency" currencySymbol="$"/></td>
 					<td>${p.stock}</td>
 					<td>
-						<a href="<c:url value='/productos?accion=editar&id=${p.id}'/>">Editar</a> |
-						<a href="<c:url value='/productos?accion=eliminar&id=${p.id}'/>" onclick="return confirm('Eliminar ${p.nombre}?')">Eliminar</a>
+						<c:if test="${usuarioActual.rol == 'ADMIN'}">
+							<a href="<c:url value='/productos?accion=editar&id=${p.id}&lang=${sessionScope.lang}'/>"><fmt:message key="producto.edit"/></a> |
+							<a href="<c:url value='/productos?accion=eliminar&id=${p.id}&lang=${sessionScope.lang}'/>" onclick="return confirm('<fmt:message key="producto.delete.confirm"><fmt:param value="${p.nombre}"/></fmt:message>')"><fmt:message key="producto.delete"/></a>
+						</c:if>
+						<c:if test="${usuarioActual.rol != 'ADMIN'}">-</c:if>
 					</td>
 				</tr>
 			</c:forEach>
